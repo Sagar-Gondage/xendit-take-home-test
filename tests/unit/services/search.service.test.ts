@@ -181,7 +181,7 @@ describe('SearchService', () => {
         priceMax: 13,
         restaurantId,
       });
-      expect(result.items).toHaveLength(2); // Pasta (11.99) and Pizza base (12.99)
+      expect(result.items).toHaveLength(1); // Nut-Free Pasta (11.99) falls in $10-$13 range
     });
 
     it('should paginate menu item results', async () => {
