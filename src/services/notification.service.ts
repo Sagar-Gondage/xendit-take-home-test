@@ -21,7 +21,7 @@ export class NotificationService {
       path: '/socket.io',
     });
 
-    this.io.use((socket: Socket, next) => {
+    this.io.use((socket: Socket, next: (err?: Error) => void) => {
       const token = socket.handshake.auth?.token || socket.handshake.query?.token;
       if (!token) {
         return next(new Error('Authentication required'));

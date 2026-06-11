@@ -62,11 +62,20 @@ class App {
     this.app.use('/api/i18n', i18nRoutes);
 
     // Health check route
-    this.app.get('/health', (req, res) => {
+    this.app.get('/health', (req: import('express').Request, res: import('express').Response) => {
       res.status(200).json({
         status: 'success',
         message: 'Server is running',
         environment: environment.nodeEnv
+      });
+    });
+
+    // 404 handler for unknown routes
+    this.app.use((req: import('express').Request, res: import('express').Response) => {
+      res.status(404).json({
+        status: 'error',
+        statusCode: 404,
+        message: `Route ${req.originalUrl} not found`,
       });
     });
   }
