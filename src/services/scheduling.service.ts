@@ -3,6 +3,8 @@ import Order from '../models/order.model';
 import Restaurant from '../models/restaurant.model';
 import { IOrder, OrderStatus } from '../types/order.types';
 import { NotFoundError, BadRequestError } from '../utils/errors';
+import { notificationService } from './notification.service';
+import { NotificationType } from '../types/notification.types';
 
 export class SchedulingService {
   /**
@@ -165,6 +167,18 @@ export class SchedulingService {
       order.status = OrderStatus.CONFIRMED;
       await order.save();
       processedOrders.push(order);
+
+      // Notify the customer that their scheduled order is now being processed (Task 2 requirement)
+      try {
+        await notificationService.sendNotification(order.customerId.toString(), {
+          type: NotificationType.ORDER_CONFIRMED,
+          title: 'Scheduled Order Confirmed',
+          message: `Your scheduled order is now being processed by the restaurant.`,
+          data: { orderId: order._id?.toString(), scheduledFor: order.scheduledFor },
+        });
+      } catch (err) {
+        console.error('[SchedulingService] Failed to send scheduled order notification:', err);
+      }
     }
 
     return processedOrders;
