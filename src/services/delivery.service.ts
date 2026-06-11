@@ -4,6 +4,7 @@ import User from '../models/user.model';
 import { OrderStatus } from '../types/order.types';
 import { UserRole } from '../types/user.types';
 import { NotFoundError, BadRequestError, ForbiddenError } from '../utils/errors';
+import { notificationService } from './notification.service';
 
 interface ILocation {
   latitude: number;
@@ -67,9 +68,15 @@ export class DeliveryService {
     if (!deliveryLocationStore.has(orderId)) {
       deliveryLocationStore.set(orderId, []);
     }
-    
+
     deliveryLocationStore.get(orderId)?.push(location);
-    
+
+    // Emit real-time location update via WebSocket (Task 4 requirement)
+    notificationService.emitDeliveryLocationUpdate(orderId, {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
+
     // Update order status if provided
     if (status) {
       // Validate status transition
@@ -79,10 +86,11 @@ export class DeliveryService {
         [OrderStatus.PREPARING]: [OrderStatus.OUT_FOR_DELIVERY],
         [OrderStatus.OUT_FOR_DELIVERY]: [OrderStatus.DELIVERED],
         [OrderStatus.DELIVERED]: [],
-        [OrderStatus.CANCELLED]: []
+        [OrderStatus.CANCELLED]: [],
       };
-      
-      if (!validTransitions[order.status].includes(status)) {
+
+      const allowedTransitions = validTransitions[order.status as OrderStatus] || [];
+      if (!allowedTransitions.includes(status)) {
         throw new BadRequestError(`Cannot transition from ${order.status} to ${status}`);
       }
       
